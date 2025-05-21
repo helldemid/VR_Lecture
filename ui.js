@@ -81,16 +81,16 @@ $(document).ready(function () {
 						surface.setUSegmentsNumber(currentValue);
 						break;
 					case 'ES':
-						renderingParams.eyeSeparation = currentValue;
+						stereoParams.eyeSeparation = currentValue;
 						break;
 					case 'FoV':
-						renderingParams.fov = currentValue;
+						stereoParams.fov = currentValue;
 						break;
 					case 'NCD':
-						renderingParams.nearClip = currentValue;
+						stereoParams.nearClip = currentValue;
 						break;
 					case 'CD':
-						renderingParams.convergence = currentValue;
+						stereoParams.convergence = currentValue;
 						break;
 				}
 				surface.initBuffer(gl);

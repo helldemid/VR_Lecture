@@ -3,18 +3,8 @@ var surface;                    // A surface model
 var shProgram;                  // A shader program
 var spaceball;                  // A SimpleRotator object that lets the user rotate the view by mouse.
 
-const renderingParams = {
-	eyeSeparation: 0.5,
-	fov: 45,
-	nearClip: 0.1,
-	convergence: 10.0,
-};
-
-const lightPosition = {
-	x: 5,
-	y: 10,
-	z: 5,
-};
+const lightParameters = { x: 10, y: 10, z: 10 };
+const stereoParams = { eyeSeparation: 0.1, fov: 60, nearClip: 0.1, convergence: 5 };
 
 /* Initialize the WebGL context. Called from init() */
 function initGL() {
@@ -40,9 +30,9 @@ function animateLight(time) {
 	const radius = baseRadius + radiusAmplitude * Math.sin(time * speed * 0.5);
 
 	// Light position coordinates
-	lightPosition.x = radius * Math.cos(time * speed); // X-coordinate changes in a circular motion
-	lightPosition.z = radius * Math.sin(time * speed); // Z-coordinate changes in a circular motion
-	lightPosition.y = 5.0 + heightAmplitude * Math.sin(time * speed * 0.7); // Y-coordinate changes smoothly over time
+	lightParameters.x = radius * Math.cos(time * speed); // X-coordinate changes in a circular motion
+	lightParameters.z = radius * Math.sin(time * speed); // Z-coordinate changes in a circular motion
+	lightParameters.y = 5.0 + heightAmplitude * Math.sin(time * speed * 0.7); // Y-coordinate changes smoothly over time
 
 	requestAnimationFrame(animateLight); // Recursive call for animation
 }
@@ -52,16 +42,16 @@ function animate() {
 	requestAnimationFrame(animate);
 }
 
-function drawEye(eyeOffset) {
-	const projection = m4.perspective((renderingParams.fov * Math.PI) / 180, 1, renderingParams.nearClip, 100);
+function drawEye(offset) {
+	const projection = m4.perspective((stereoParams.fov * Math.PI) / 180, 1, stereoParams.nearClip, 100);
 	const modelView = spaceball.getViewMatrix();
 
 	// Apply eye offset
-	const eyeMatrix = m4.translation(eyeOffset, 0, 0);
+	const eyeMatrix = m4.translation(offset, 0, 0);
 	const viewMatrix = m4.multiply(eyeMatrix, modelView);
 
 	const rotateToPointZero = m4.axisRotation([Math.SQRT1_2, Math.SQRT1_2, 0], 0.7);
-	const translateToPointZero = m4.translation(0, 0, -renderingParams.convergence);
+	const translateToPointZero = m4.translation(0, 0, -stereoParams.convergence);
 
 	const matAcc0 = m4.multiply(rotateToPointZero, viewMatrix);
 	const matAcc1 = m4.multiply(translateToPointZero, matAcc0);
@@ -75,18 +65,13 @@ function drawEye(eyeOffset) {
 
 
 	gl.uniform3fv(shProgram.viewPositionUni, [0.0, 0.0, 5.0]);
-	gl.uniform3f(
-		shProgram.lightDirectionUni,
-		lightPosition.x,
-		lightPosition.y,
-		lightPosition.z,
-	);
+	gl.uniform3f(shProgram.lightDirectionUni, lightParameters.x, lightParameters.y, lightParameters.z);
 
-	// Draw filled surface
+	// render surface
 	gl.uniform1i(shProgram.isWireframeUni, false);
 	surface.draw(gl, shProgram);
 
-	// Draw wireframe
+	// render frame
 	gl.enable(gl.POLYGON_OFFSET_FILL);
 	gl.polygonOffset(1, 1);
 	gl.uniform1i(shProgram.isWireframeUni, true);
@@ -100,26 +85,25 @@ function draw() {
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
 	// Draw background video if available
-	if (webcamElement && webcamElement.videoWidth > 0) {
+	if (WebCamObj && WebCamObj.videoWidth > 0) {
 		drawVideoBackground();
 	}
 
 	// Set lighting parameters with brighter values for anaglyphic view
 	gl.uniform3f(shProgram.ambientColorUni, 0.05, 0.05, 0.05);
-	gl.uniform3f(shProgram.diffuseColorUni, 0.8, 0.8, 0.8); // Белый свет
-
+	gl.uniform3f(shProgram.diffuseColorUni, 0.8, 0.8, 0.8);
 	gl.uniform3f(shProgram.specularColorUni, 1.0, 1.0, 1.0);
 	gl.uniform1f(shProgram.shininessUni, 32.0);
 
-	// Draw for left eye (red)
+	// Render left eye (red)
 	gl.colorMask(true, false, false, true);
 	gl.clear(gl.DEPTH_BUFFER_BIT);
-	drawEye(-renderingParams.eyeSeparation / 2);
+	drawEye(stereoParams.eyeSeparation / 2);
 
-	// Draw for right eye (cyan)
+	// Render right eye (cyan)
 	gl.colorMask(false, true, true, true);
 	gl.clear(gl.DEPTH_BUFFER_BIT);
-	drawEye(renderingParams.eyeSeparation / 2);
+	drawEye(-stereoParams.eyeSeparation / 2);
 
 	gl.colorMask(true, true, true, true);
 }
@@ -145,7 +129,7 @@ async function init() {
 		return;
 	}
 	spaceball = new TrackballRotator(canvas, draw, 0);
-	await initWebcam();
+	await intVideoStream();
 	draw();
 	animateLight(0);
 	animate()

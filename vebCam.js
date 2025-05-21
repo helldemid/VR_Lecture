@@ -1,14 +1,14 @@
-var videoTexture;
-var webcamElement;
+var webCamTexture;
+var WebCamObj;
 
-async function initWebcam() {
-	webcamElement = document.getElementById("webcam");
+async function intVideoStream() {
+	WebCamObj = document.getElementById("webcam");
 	try {
 		const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-		webcamElement.srcObject = stream;
+		WebCamObj.srcObject = stream;
 
-		videoTexture = gl.createTexture();
-		gl.bindTexture(gl.TEXTURE_2D, videoTexture);
+		webCamTexture = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D, webCamTexture);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -17,26 +17,7 @@ async function initWebcam() {
 	}
 }
 
-function initBackgroundShaders() {
-	const backgroundVertexShader = `
-        attribute vec2 position;
-        attribute vec2 texCoord;
-        varying vec2 vTexCoord;
-        void main() {
-            gl_Position = vec4(position, 0.0, 1.0);
-            vTexCoord = texCoord;
-        }
-    `;
-
-	const backgroundFragmentShader = `
-        precision mediump float;
-        uniform sampler2D uTexture;
-        varying vec2 vTexCoord;
-        void main() {
-            gl_FragColor = texture2D(uTexture, vTexCoord);
-        }
-    `;
-
+function intVideoStreamShaders() {
 	// Create a proper shader program instance
 	const backgroundProgram = new ShProgram("Background");
 	backgroundProgram.init(gl, backgroundVertexShader, backgroundFragmentShader);
@@ -61,18 +42,13 @@ function initBackgroundShaders() {
 
 function drawVideoBackground() {
 	if (!shProgram.backgroundProgram) {
-		initBackgroundShaders();
+		intVideoStreamShaders();
 	}
 
 	gl.useProgram(shProgram.backgroundProgram.prog);
 
 	// Set up a simple quad for the background
 	const vertices = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
-
-	// Flip the texture coordinates both horizontally and vertically
-	// Original: [0, 0, 1, 0, 0, 1, 1, 1]
-	// Horizontal flip: [1, 0, 0, 0, 1, 1, 0, 1]
-	// Vertical flip: [1, 1, 0, 1, 1, 0, 0, 0]
 	const texCoords = new Float32Array([1, 1, 0, 1, 1, 0, 0, 0]);
 
 	// Create and bind buffers
@@ -95,8 +71,8 @@ function drawVideoBackground() {
 
 	// Set the texture unit
 	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, videoTexture);
-	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, webcamElement);
+	gl.bindTexture(gl.TEXTURE_2D, webCamTexture);
+	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, WebCamObj);
 	gl.uniform1i(shProgram.backgroundProgram.textureLoc, 0);
 
 	// Draw
