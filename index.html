@@ -1,33 +1,100 @@
 <!DOCTYPE html>
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<html lang="en">
 
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>PA#1</title>
+	<link rel="stylesheet" href="./style.css" />
 
-<title>PA#1</title>
-<style>
-    body {
-        background-color: #EEEEEE;
-    }
-</style>
-
-<script src="./Utils/trackball-rotator.js"></script>
-<script src="./Utils/m4.js"></script>
-<script src="./shader.gpu"></script>
-<script src="./Model.js"></script>
-<script src="./StereoCamera.js"></script>
-<script src="./main.js"></script>
-
+	<script src="./Utils/trackball-rotator.js"></script>
+	<script src="./Utils/m4.js"></script>
+	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+	<script src="./shaders/shaders.js"></script>
+	<script src="./Surface.js"></script>
+	<script src="./ShProgram.js"></script>
+	<script src="./vebCam.js"></script>
+	<script src="./main.js"></script>
+	<script src="./ui.js"></script>
 </head>
+
 <body onload="init()">
+	<h1>Practical assignment #1 (Stereo camera)</h1>
+	<p id="message">
+		Author: Demyd Demydovych, TR-42mp<br>
+		Surface: Parabolic Humming-Top<br>
+	</p>
+	<div class="surface-parameters">
+		<div class="input-block">
+			<p>Surface parameters</p>
+			<div class="inputWithLabel">
+				<label for="h">h</label>
+				<input type="number" id="h" value="0">
+			</div>
+			<div class="inputWithLabel">
+				<label for="p">p</label>
+				<input type="number" id="p" value="0">
+			</div>
+		</div>
+		<div class="input-block">
+			<p>Segments</p>
+			<div class="inputWithLabelVertical">
+				<p>U polylines</p>
+				<div class="slider__box" param="U">
+					<span class="slider__btn" id="find"></span>
+					<span class="slider__color"></span>
+					<span class="slider__tooltip">65</span>
+				</div>
+			</div>
+			<div class="inputWithLabelVertical">
+				<p>V polylines</p>
+				<div class="slider__box" param="V">
+					<span class="slider__btn" id="find"></span>
+					<span class="slider__color"></span>
+					<span class="slider__tooltip">65</span>
+				</div>
+			</div>
+		</div>
+		<div class="input-block" style="gap: 40px;">
+			<p>3D</p>
+			<div class="inputWithLabelVertical">
+				<p>Eye Separation</p>
+				<div class="slider__box" param="ES">
+					<span class="slider__btn" id="find"></span>
+					<span class="slider__color"></span>
+					<span class="slider__tooltip">0.5</span>
+				</div>
+			</div>
+			<div class="inputWithLabelVertical">
+				<p>Field of View (degrees)</p>
+				<div class="slider__box" param="FoV">
+					<span class="slider__btn" id="find"></span>
+					<span class="slider__color"></span>
+					<span class="slider__tooltip">45</span>
+				</div>
+			</div>
+			<div class="inputWithLabelVertical">
+				<p>Near Clipping Distance</p>
+				<div class="slider__box" param="NCD">
+					<span class="slider__btn" id="find"></span>
+					<span class="slider__color"></span>
+					<span class="slider__tooltip">0.1</span>
+				</div>
+			</div>
+			<div class="inputWithLabelVertical">
+				<p>Convergence Distance</p>
+				<div class="slider__box" param="CD">
+					<span class="slider__btn" id="find"></span>
+					<span class="slider__color"></span>
+					<span class="slider__tooltip">10.0</span>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="canvas-holder">
+		<canvas width="1200" height="500" id="webglcanvas"></canvas>
+	</div>
+	<video id="webcam" style="display: none" autoplay playsinline></video>
+</body>
 
-<h2>A Cube with "Trackball" Mouse Rotation</h2>
-
-<p id="message">Drag your mouse on the cube to rotate it.<br>
-(On a touch screen, you can use your finger.)</p>
-
-
-<div id="canvas-holder">
-   <canvas width="600" height="600" id="webglcanvas" style="background-color:red"></canvas>
-</div>
-
-
-</body></html>
+</html>
