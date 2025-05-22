@@ -5,6 +5,26 @@ var spaceball;                  // A SimpleRotator object that lets the user rot
 
 const lightParameters = { x: 10, y: 10, z: 10 };
 const stereoParams = { eyeSeparation: 0.1, fov: 60, nearClip: 0.1, convergence: 5 };
+const gyroRotation = { x: 0, y: 0, z: 0 };
+
+const socket = new WebSocket("ws://192.168.0.101:3000");
+
+function getAngles(accX, accY, accZ) {
+	const pitch = Math.atan2(accX, Math.sqrt(accY * accY + accZ * accZ));
+	const roll = Math.atan2(accY, accZ);
+	return {
+		pitch: pitch * 180 / Math.PI,
+		roll: roll * 180 / Math.PI
+	};
+}
+
+socket.onmessage = function (event) {
+	const data = JSON.parse(event.data);
+	const angles = getAngles(data.accX, data.accY, data.accZ);
+	gyroRotation.x = angles.pitch * -0.02;
+	gyroRotation.y = angles.roll * 0.02;
+	gyroRotation.z = 0; // Usually not used, but can be added
+};
 
 /* Initialize the WebGL context. Called from init() */
 function initGL() {
@@ -46,9 +66,18 @@ function drawEye(offset) {
 	const projection = m4.perspective((stereoParams.fov * Math.PI) / 180, 1, stereoParams.nearClip, 100);
 	const modelView = spaceball.getViewMatrix();
 
+	//--- Add rotation from the gyroscope ---
+	let gyroMatrix = m4.identity();
+	gyroMatrix = m4.xRotate(gyroMatrix, gyroRotation.x);
+	gyroMatrix = m4.yRotate(gyroMatrix, gyroRotation.y);
+	gyroMatrix = m4.zRotate(gyroMatrix, gyroRotation.z);
+
+	// Apply the gyro rotation to the current view matrix
+	const rotatedView = m4.multiply(gyroMatrix, modelView);
+
 	// Apply eye offset
 	const eyeMatrix = m4.translation(offset, 0, 0);
-	const viewMatrix = m4.multiply(eyeMatrix, modelView);
+	const viewMatrix = m4.multiply(eyeMatrix, rotatedView);
 
 	const rotateToPointZero = m4.axisRotation([Math.SQRT1_2, Math.SQRT1_2, 0], 0.7);
 	const translateToPointZero = m4.translation(0, 0, -stereoParams.convergence);
