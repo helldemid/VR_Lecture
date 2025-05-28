@@ -66,6 +66,7 @@ class SurfaceThreeJS {
             metalness: 0.6,
             roughness: 0.1,
             side: THREE.DoubleSide,
+            wireframe: true,
         });
 
         this.mesh = new THREE.Mesh(this.geometry, material);
